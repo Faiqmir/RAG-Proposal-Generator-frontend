@@ -1,0 +1,424 @@
+body {
+  margin: 0;
+  background: radial-gradient(circle at top left, #eef2ff 0%, #f9fafb 38%, #e0f2fe 85%);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0f172a;
+  min-height: 100vh;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+.page-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: #0f172a;
+  background:
+    radial-gradient(circle at 10% -10%, rgba(129, 140, 248, 0.22), transparent 55%),
+    radial-gradient(circle at 90% 120%, rgba(45, 212, 191, 0.16), transparent 55%);
+}
+
+.hero {
+  padding: 1.5rem 1.5rem 1.75rem;
+  background: linear-gradient(120deg, #eef2ff 0%, #e0f2fe 40%, #fdf2ff 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.32);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.hero-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.hero-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.hero-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hero-logo-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 0, #f97316, #eab308 35%, #6366f1 100%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 10px 25px rgba(148, 163, 184, 0.65);
+}
+
+.hero-logo-text {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  font-size: 1rem;
+}
+
+.hero-toggle-pill {
+  border-radius: 999px;
+  border: 1px solid rgba(129, 140, 248, 0.6);
+  padding: 0.4rem 0.95rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: #4f46e5;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(129, 140, 248, 0.35);
+}
+
+.hero-main {
+  max-width: 640px;
+}
+
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.08);
+  border: 1px solid rgba(129, 140, 248, 0.65);
+  color: #4338ca;
+  font-size: 0.8rem;
+  margin-bottom: 1.25rem;
+}
+
+.hero-title {
+  margin: 0;
+  font-size: clamp(2.1rem, 3.6vw, 3rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #1c6fc2;
+}
+
+.hero-highlight {
+  background: linear-gradient(135deg, #a855f7 0%, #6366f1 45%, #22c55e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  margin-top: 0.9rem;
+  margin-bottom: 1.25rem;
+  color: #4b5563;
+  font-size: 0.98rem;
+  max-width: 34rem;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1.5rem 1.5rem 2rem;
+  background: linear-gradient(180deg, transparent, rgba(226, 232, 240, 0.8));
+}
+
+.app-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  color: #0f172a;
+}
+
+.panels-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel h2::before {
+  content: '';
+  width: 4px;
+  height: 1.5rem;
+  background: linear-gradient(135deg, #6366f1 0%, #22c55e 100%);
+  border-radius: 999px;
+}
+
+.muted-text {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 22px 50px rgba(148, 163, 184, 0.38);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: box-shadow 0.3s ease;
+}
+
+.panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-header-row h2 {
+  margin: 0;
+}
+
+.panel:hover {
+  box-shadow: 0 16px 40px rgba(129, 140, 248, 0.35);
+}
+
+.selected-file {
+  margin-top: 0.75rem;
+  display: block;
+}
+
+.pdf-viewer {
+  height: 460px;
+  border: 1px solid rgba(209, 213, 219, 0.9);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(148, 163, 184, 0.35);
+}
+
+.pdf-placeholder {
+  height: 320px;
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(248, 250, 252, 0.9);
+  padding: 1.5rem;
+  text-align: center;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.pdf-placeholder:hover {
+  border-color: #6366f1;
+  background: rgba(239, 246, 255, 0.95);
+}
+
+.project-settings {
+  margin-top: 0.75rem;
+  padding-top: 0;
+  border-top: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.project-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.project-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.project-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.project-select,
+.project-input {
+  width: 100%;
+}
+
+.hint-text {
+  margin-top: 0.75rem;
+  display: block;
+}
+
+.processing-hint {
+  margin-top: 0.25rem;
+}
+
+.error-text {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.95rem;
+  padding: 0.75rem;
+  background: #fee2e2;
+  border-left: 3px solid #ef4444;
+  border-radius: 6px;
+}
+
+.command-panel {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(199, 210, 254, 0.9);
+  border-radius: 14px;
+  background: rgba(239, 246, 255, 0.95);
+  box-shadow: 0 10px 32px rgba(129, 140, 248, 0.25);
+}
+
+.command-label {
+  font-weight: 600;
+  color: #4f46e5;
+  font-size: 0.95rem;
+}
+
+.command-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.command-panel .ant-radio-button-wrapper {
+  border-color: rgba(129, 140, 248, 0.7);
+  color: #4b5563;
+}
+
+.command-panel .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+  border-color: #4f46e5;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+}
+
+.command-panel .ant-radio-button-wrapper:first-child {
+  border-start-start-radius: 6px;
+  border-end-start-radius: 6px;
+}
+
+.command-panel .ant-radio-button-wrapper:last-child {
+  border-start-end-radius: 6px;
+  border-end-end-radius: 6px;
+}
+
+.command-hint {
+  font-size: 0.9rem;
+  background: rgba(239, 246, 255, 0.9);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px dashed rgba(129, 140, 248, 0.7);
+}
+
+.command-button {
+  align-self: flex-end;
+}
+
+/* Ant Design Button Customization */
+.ant-btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #ec4899 55%, #f97316 100%);
+  border: none;
+  box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
+  transition: all 0.25s ease;
+}
+
+.ant-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f97316 0%, #ec4899 40%, #6366f1 100%);
+  box-shadow: 0 8px 20px rgba(236, 72, 153, 0.55);
+  transform: translateY(-1px);
+}
+
+.ant-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ant-btn-primary:disabled {
+  background: #e5e7eb;
+  box-shadow: none;
+}
+
+/* Ant Design Upload Dragger Customization */
+.ant-upload-drag {
+  border-color: rgba(148, 163, 184, 0.65);
+  background: rgba(248, 250, 252, 0.95);
+  transition: all 0.25s ease;
+}
+
+.ant-upload-drag:hover {
+  border-color: #6366f1;
+  background: rgba(239, 246, 255, 0.98);
+}
+
+.ant-upload-drag-icon {
+  color: #6366f1;
+}
+
+.ant-upload-text {
+  color: #111827;
+  font-weight: 600;
+}
+
+.ant-upload-hint {
+  color: #6b7280;
+}
+
+/* Link styling */
+a {
+  color: #4f46e5;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #ec4899;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+
+  .panels-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel {
+    padding: 1.25rem;
+  }
+
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .devgate-brand {
+    align-self: flex-end;
+  }
+}
