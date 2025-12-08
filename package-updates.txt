@@ -1,0 +1,11 @@
+Dependencies to add for enhanced report functionality:
+
+npm install react-markdown remark-gfm html2pdf.js
+
+Or with yarn:
+yarn add react-markdown remark-gfm html2pdf.js
+
+These packages will enable:
+- react-markdown: Professional markdown rendering
+- remark-gfm: GitHub Flavored Markdown support (tables, etc.)
+- html2pdf.js: Frontend PDF generation from HTML
