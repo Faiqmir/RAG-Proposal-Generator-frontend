@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button, Card, Table, Spin, Alert, Divider, Tabs } from 'antd'
-import { DownloadOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons'
+import { DownloadOutlined, FileTextOutlined, EyeOutlined, FileWordOutlined } from '@ant-design/icons'
 import { Worker, Viewer } from '@react-pdf-viewer/core'
 import '@react-pdf-viewer/core/lib/styles/index.css'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
@@ -9,6 +9,7 @@ import "../App.css";
 import MarkdownDisplay from './MarkdownDisplay';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table as DocxTable, TableRow, TableCell, WidthType } from 'docx';
 
 const { TabPane } = Tabs;
 
@@ -112,28 +113,28 @@ function ReportGenerationPage({
         format: 'a4'
       })
 
-      // PDF dimensions and margins
+      // PDF dimensions and margins - increased for better alignment
       const pageWidth = 210 // A4 width in mm
       const pageHeight = 295 // A4 height in mm
-      const margin = 15 // 15mm margins
+      const margin = 20 // Increased to 20mm for better padding
       const contentWidth = pageWidth - (margin * 2)
       
-      // Add title with currency info if available
+      // Add title with currency info if available - better positioning
       pdf.setFontSize(16)
       pdf.setFont('helvetica', 'bold')
       const title = uploadedFile 
         ? uploadedFile.name.replace(/\.[^/.]+$/, '') + ' Report'
         : 'Generated Report'
-      pdf.text(title, pageWidth / 2, margin, { align: 'center' })
+      pdf.text(title, pageWidth / 2, margin + 5, { align: 'center' })
       
       // Add currency indicator if specified
       if (currency && currency !== 'USD') {
         pdf.setFontSize(10)
         pdf.setFont('helvetica', 'normal')
-        pdf.text(`Currency: ${currency}`, pageWidth / 2, margin + 8, { align: 'center' })
+        pdf.text(`Currency: ${currency}`, pageWidth / 2, margin + 12, { align: 'center' })
       }
 
-      // Use html2canvas to capture the styled markdown content
+      // Use html2canvas to capture the styled markdown content with better settings
       console.log('Starting html2canvas...')
       const canvas = await html2canvas(markdownElement, {
         scale: 2,
@@ -142,19 +143,23 @@ function ReportGenerationPage({
         backgroundColor: '#ffffff',
         width: markdownElement.scrollWidth,
         height: markdownElement.scrollHeight,
-        logging: false
+        logging: false,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0
       })
 
       console.log('Canvas created successfully:', canvas.width, 'x', canvas.height)
       const imgData = canvas.toDataURL('image/png')
       console.log('Image data created, length:', imgData.length)
       
-      // Calculate dimensions to fit within margins
+      // Calculate dimensions to fit within margins with better alignment
       const imgWidth = contentWidth
       const imgHeight = (canvas.height * imgWidth) / canvas.width
       
       let heightLeft = imgHeight
-      let position = margin + 15 // Start after title
+      let position = margin + 20 // Better spacing after title
 
       // Add first page
       if (heightLeft <= pageHeight - margin - 20) {
@@ -234,15 +239,447 @@ function ReportGenerationPage({
       
       // Restore button state
       const button = document.querySelector('button[type="primary"]')
-      if (button) {
-        button.innerHTML = originalText
-        button.disabled = false
+      // Fallback to opening report URL if available
+      if (reportUrl) {
+        window.open(reportUrl, '_blank', 'noopener,noreferrer')
       }
+    }
+  }
+
+  const handleExportDOCX = async () => {
+    if (!markdownContent) {
+      console.error('No markdown content to export')
+      return
+    }
+
+    try {
+      // Show loading state
+      const buttons = document.querySelectorAll('.export-button')
+      const originalStates = []
+      buttons.forEach(button => {
+        if (button.textContent.includes('DOCX')) {
+          originalStates.push({ button, text: button.innerHTML, disabled: button.disabled })
+          button.innerHTML = '<span>Generating DOCX...</span>'
+          button.disabled = true
+        }
+      })
+
+      console.log('DOCX generation started...')
+      
+      // Parse markdown content exactly as shown in frontend
+      const lines = markdownContent.split('\n')
+      const docxChildren = []
+      
+      // Add title
+      const title = uploadedFile 
+        ? uploadedFile.name.replace(/\.[^/.]+$/, '') + ' Report'
+        : 'Generated Report'
+      
+      docxChildren.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: title,
+              bold: true,
+              size: 32,
+            }),
+          ],
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 },
+        })
+      )
+
+      // Add currency info if specified
+      if (currency && currency !== 'USD') {
+        docxChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Currency: ${currency}`,
+                size: 20,
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 600 },
+          })
+        )
+      }
+
+      // Process markdown lines exactly preserving structure
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        
+        // Preserve empty lines exactly as in markdown
+        if (!line.trim()) {
+          docxChildren.push(
+            new Paragraph({
+              children: [],
+              spacing: { after: 200 },
+            })
+          )
+          continue
+        }
+
+        // Check for markdown table - detect by pipe characters
+        if (line.includes('|') && line.split('|').length > 2) {
+          // Parse complete table including all rows
+          const tableResult = parseMarkdownTable(lines, i)
+          if (tableResult.tableRows.length > 0) {
+            // Create DOCX table with proper formatting
+            const tableRows = tableResult.tableRows.map((rowData, rowIndex) => {
+              const isHeader = rowIndex === 0 || (rowIndex === 1 && tableResult.tableRows[0].length === rowData.length)
+              
+              return new TableRow({
+                children: rowData.map(cellData => 
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: cellData || '',
+                            bold: isHeader,
+                            size: 20,
+                          }),
+                        ],
+                        spacing: { after: 100 },
+                      })
+                    ],
+                    borders: {
+                      top: { style: BorderStyle.SINGLE, size: 1 },
+                      bottom: { style: BorderStyle.SINGLE, size: 1 },
+                      left: { style: BorderStyle.SINGLE, size: 1 },
+                      right: { style: BorderStyle.SINGLE, size: 1 },
+                    },
+                    shading: isHeader ? {
+                      fill: "E8F4FD",
+                      type: "solid",
+                    } : undefined,
+                  })
+                ),
+              })
+            })
+            
+            const docxTable = new DocxTable({
+              rows: tableRows,
+              width: {
+                size: 100,
+                type: WidthType.PERCENTAGE,
+              },
+              borders: {
+                top: { style: BorderStyle.SINGLE, size: 1 },
+                bottom: { style: BorderStyle.SINGLE, size: 1 },
+                left: { style: BorderStyle.SINGLE, size: 1 },
+                right: { style: BorderStyle.SINGLE, size: 1 },
+              },
+            })
+            
+            docxChildren.push(docxTable)
+            docxChildren.push(
+              new Paragraph({
+                children: [],
+                spacing: { after: 400 },
+              })
+            )
+            
+            i = tableResult.nextIndex - 1
+            continue
+          }
+        }
+
+        // Headers - preserve exact text with professional formatting
+        if (line.startsWith('# ')) {
+          docxChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: line.substring(2),
+                  bold: true,
+                  size: 32,
+                  color: "2C3E50",
+                }),
+              ],
+              heading: HeadingLevel.HEADING_1,
+              spacing: { before: 600, after: 300 },
+              border: {
+                bottom: {
+                  color: "3498DB",
+                  size: 2,
+                  style: BorderStyle.SINGLE,
+                },
+              },
+            })
+          )
+        } else if (line.startsWith('## ')) {
+          docxChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: line.substring(3),
+                  bold: true,
+                  size: 26,
+                  color: "34495E",
+                }),
+              ],
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 400, after: 250 },
+            })
+          )
+        } else if (line.startsWith('### ')) {
+          docxChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: line.substring(4),
+                  bold: true,
+                  size: 22,
+                  color: "2C3E50",
+                }),
+              ],
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: 300, after: 200 },
+            })
+          )
+        } else if (line.startsWith('#### ')) {
+          docxChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: line.substring(5),
+                  bold: true,
+                  size: 20,
+                  color: "34495E",
+                }),
+              ],
+              heading: HeadingLevel.HEADING_4,
+              spacing: { before: 200, after: 150 },
+            })
+          )
+        } 
+        // Enhanced bullet points with bold text support
+        else if (line.trim().match(/^[-*●]\s+/)) {
+          const bulletText = line.trim().replace(/^[-*●]\s+/, '')
+          const textRuns = []
+          
+          // Handle bold text within bullet points: **text**
+          const boldMatches = bulletText.match(/\*\*(.*?)\*\*/g)
+          if (boldMatches) {
+            let lastIndex = 0
+            boldMatches.forEach(match => {
+              const boldText = match.slice(2, -2)
+              const matchIndex = bulletText.indexOf(match)
+              
+              // Add text before bold
+              if (matchIndex > lastIndex) {
+                textRuns.push(
+                  new TextRun({
+                    text: bulletText.substring(lastIndex, matchIndex),
+                    size: 22,
+                    color: "2C3E50",
+                  })
+                )
+              }
+              
+              // Add bold text
+              textRuns.push(
+                new TextRun({
+                  text: boldText,
+                  bold: true,
+                  size: 22,
+                  color: "2C3E50",
+                })
+              )
+              
+              lastIndex = matchIndex + match.length
+            })
+            
+            // Add remaining text
+            if (lastIndex < bulletText.length) {
+              textRuns.push(
+                new TextRun({
+                  text: bulletText.substring(lastIndex),
+                  size: 22,
+                  color: "2C3E50",
+                })
+              )
+            }
+          } else {
+            textRuns.push(
+              new TextRun({
+                text: bulletText,
+                size: 22,
+                color: "2C3E50",
+              })
+            )
+          }
+          
+          docxChildren.push(
+            new Paragraph({
+              children: textRuns,
+              bullet: {
+                level: 0,
+              },
+              spacing: { after: 200 },
+              indent: { left: 720 }, // Proper indentation for bullets
+            })
+          )
+        } 
+        // Regular paragraph with enhanced formatting
+        else {
+          // Handle inline bold text **text** and other formatting
+          const textRuns = []
+          let remainingText = line
+          
+          // Process bold text **text**
+          const boldMatches = remainingText.match(/\*\*(.*?)\*\*/g)
+          if (boldMatches) {
+            let lastIndex = 0
+            boldMatches.forEach(match => {
+              const boldText = match.slice(2, -2)
+              const matchIndex = remainingText.indexOf(match)
+              
+              // Add text before bold
+              if (matchIndex > lastIndex) {
+                textRuns.push(
+                  new TextRun({
+                    text: remainingText.substring(lastIndex, matchIndex),
+                    size: 22,
+                    color: "2C3E50",
+                  })
+                )
+              }
+              
+              // Add bold text
+              textRuns.push(
+                new TextRun({
+                  text: boldText,
+                  bold: true,
+                  size: 22,
+                  color: "2C3E50",
+                })
+              )
+              
+              lastIndex = matchIndex + match.length
+            })
+            
+            // Add remaining text
+            if (lastIndex < remainingText.length) {
+              textRuns.push(
+                new TextRun({
+                  text: remainingText.substring(lastIndex),
+                  size: 22,
+                  color: "2C3E50",
+                })
+              )
+            }
+          } else {
+            textRuns.push(
+              new TextRun({
+                text: line,
+                size: 22,
+                color: "2C3E50",
+              })
+            )
+          }
+          
+          docxChildren.push(
+            new Paragraph({
+              children: textRuns,
+              spacing: { after: 200 },
+              lineSpacing: 1.15, // Better line spacing for readability
+            })
+          )
+        }
+      }
+
+      // Create document
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: docxChildren,
+          },
+        ],
+      })
+
+      // Generate filename
+      const baseName = uploadedFile
+        ? uploadedFile.name.replace(/\.[^/.]+$/, '')
+        : 'report'
+
+      // Create and download DOCX
+      const buffer = await Packer.toBlob(doc)
+      const url = URL.createObjectURL(buffer)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${baseName}-report.docx`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+
+      console.log('DOCX generated successfully')
+
+      // Restore button states
+      originalStates.forEach(({ button, text, disabled }) => {
+        button.innerHTML = text
+        button.disabled = disabled
+      })
+
+    } catch (error) {
+      console.error('Error generating DOCX:', error)
+      
+      // Restore button states
+      const buttons = document.querySelectorAll('.export-button')
+      buttons.forEach(button => {
+        if (button.textContent.includes('Generating')) {
+          button.innerHTML = '<span><FileWordOutlined /> Export DOCX</span>'
+          button.disabled = false
+        }
+      })
       
       // Fallback to opening report URL if available
       if (reportUrl) {
         window.open(reportUrl, '_blank', 'noopener,noreferrer')
       }
+    }
+  }
+
+  // Helper function to parse markdown tables exactly
+  const parseMarkdownTable = (lines, startIndex) => {
+    const tableRows = []
+    let i = startIndex
+    
+    // Find all table rows
+    while (i < lines.length) {
+      const line = lines[i]
+      
+      // Stop if not a table row
+      if (!line.includes('|') || line.split('|').length < 3) {
+        break
+      }
+      
+      // Skip separator line (|---|---|---|)
+      if (line.match(/^\|[\s\-\|:]+\|$/)) {
+        i++
+        continue
+      }
+      
+      // Parse table row - preserve exact content
+      const cells = line.split('|')
+        .map(cell => cell.trim())
+        .filter(cell => cell !== '') // Remove empty cells from start/end
+      
+      if (cells.length > 0) {
+        tableRows.push(cells)
+      }
+      
+      i++
+    }
+    
+    return {
+      tableRows: tableRows,
+      nextIndex: i
     }
   }
 
@@ -258,15 +695,27 @@ function ReportGenerationPage({
       <div className="panel preview-panel">
         <div className="panel-header-row">
           <h2>2. Generated Report & Export</h2>
-          <Button
-            type="primary"
-            icon={<DownloadOutlined />}
-            disabled={!markdownContent}
-            loading={isProcessing}
-            onClick={handleExportPDF}
-          >
-            Export PDF
-          </Button>
+          <div className="export-buttons">
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              disabled={!markdownContent}
+              loading={isProcessing}
+              onClick={handleExportPDF}
+            >
+              Export PDF
+            </Button>
+            <Button
+              type="default"
+              icon={<FileWordOutlined />}
+              disabled={!markdownContent}
+              loading={isProcessing}
+              onClick={handleExportDOCX}
+              className="export-button"
+            >
+              Export DOCX
+            </Button>
+          </div>
         </div>
 
         <p className="muted-text">

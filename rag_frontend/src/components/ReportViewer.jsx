@@ -71,7 +71,7 @@ function ReportViewer({ response, currency = 'USD' }) {
   if (!response || !response.data) {
     return (
       <Card title="Report Generation">
-        <div style={{ textAlign: 'center', padding: '40px' }}>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
           <Spin size="large" />
           <Title level={4} style={{ marginTop: 16 }}>
             Generating report...
